@@ -128,7 +128,7 @@ export default function ResultPage() {
           <div className="px-4 pb-6 flex flex-col gap-1">
 
             {/* USERNAME */}
-            <FieldLabel>Ім&apos;я користувача</FieldLabel>
+            <FieldLabel>Нікнейм</FieldLabel>
             <div className="flex flex-col gap-2 mb-4">
               {nicks.map((nick, i) => (
                 <div key={i}
@@ -188,7 +188,12 @@ export default function ResultPage() {
             <p className="text-xs px-1 mb-4" style={{ color: "#444" }}>💡 {result.header.tip}</p>
 
             {/* BIO */}
-            <FieldLabel>Біографія <span style={{ color: "#555", fontWeight: 400 }}>({result.bio.text.length}/80 символів)</span></FieldLabel>
+            <FieldLabel>
+              Біографія{" "}
+              <span style={{ color: result.bio.text.length > 79 ? "#f87171" : "#555", fontWeight: 400 }}>
+                ({result.bio.text.length}/80 символів{result.bio.text.length > 79 ? " — ЗАБАГАТО!" : ""})
+              </span>
+            </FieldLabel>
             <div className="rounded-xl px-4 py-3 mb-1" style={{ background: "#1a1a1a", border: "1px solid #2a2a2a" }}>
               <div className="flex items-start justify-between gap-3">
                 <p className="text-white text-sm leading-relaxed flex-1">{result.bio.text}</p>
