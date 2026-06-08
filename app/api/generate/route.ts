@@ -3,7 +3,7 @@ import { buildPrompt, FormData } from "@/config/prompts";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY!;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "gemma2-9b-it";
+const MODEL = "llama3-70b-8192";
 
 async function callGroq(prompt: string): Promise<string> {
   const res = await fetch(GROQ_URL, {
