@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 const NICHES = [
   "БАДи та здоров'я",
@@ -35,18 +36,22 @@ const defaultForm: FormState = {
   link: "",
 };
 
-export default function Home() {
+function HomeInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState<FormState>(defaultForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Відновлюємо дані ТІЛЬКИ якщо прийшли з кнопки "Змінити дані"
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setForm(JSON.parse(saved));
-    } catch {}
-  }, []);
+    if (searchParams.get("edit") === "1") {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) setForm(JSON.parse(saved));
+      } catch {}
+    }
+  }, [searchParams]);
 
   const updateField = (field: keyof FormState, value: string) => {
     setForm((prev) => {
@@ -64,7 +69,6 @@ export default function Home() {
       setError("Будь ласка, заповніть усі обов'язкові поля");
       return;
     }
-
     if (form.niche === "Інше" && !form.nicheOther) {
       setError("Вкажіть свою нішу");
       return;
@@ -77,11 +81,8 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || "Помилка генерації");
-
       localStorage.setItem("tiktok_result", JSON.stringify(data));
       router.push("/result");
     } catch (err: unknown) {
@@ -93,15 +94,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen px-4 py-12 flex flex-col items-center">
-      {/* Header */}
       <div className="text-center mb-10 animate-fade-up">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-          style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)" }}>
+        <div
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+          style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)" }}
+        >
           <span className="text-sm font-medium" style={{ color: "#A78BFA" }}>
             🎵 TikTok Profile Generator
           </span>
         </div>
-
         <h1 className="text-3xl md:text-5xl font-bold mb-3 leading-tight">
           <span className="gradient-text">Генератор TikTok-профілю</span>
         </h1>
@@ -110,14 +111,10 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Form card */}
       <div className="w-full max-w-xl animate-fade-up stagger-1">
-        <div className="rounded-2xl p-6 md:p-8"
-          style={{ background: "#111", border: "1px solid #222" }}>
-
+        <div className="rounded-2xl p-6 md:p-8" style={{ background: "#111", border: "1px solid #222" }}>
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-            {/* Name */}
             <Field label="Твоє ім'я або псевдонім" required>
               <input
                 type="text"
@@ -127,16 +124,10 @@ export default function Home() {
               />
             </Field>
 
-            {/* Niche */}
             <Field label="Що ти продаєш?" required>
-              <select
-                value={form.niche}
-                onChange={(e) => updateField("niche", e.target.value)}
-              >
+              <select value={form.niche} onChange={(e) => updateField("niche", e.target.value)}>
                 <option value="" disabled>Оберіть нішу</option>
-                {NICHES.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
+                {NICHES.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
               {form.niche === "Інше" && (
                 <input
@@ -149,7 +140,6 @@ export default function Home() {
               )}
             </Field>
 
-            {/* Product */}
             <Field label="Назва продукту або компанії" required>
               <input
                 type="text"
@@ -159,7 +149,6 @@ export default function Home() {
               />
             </Field>
 
-            {/* Audience */}
             <Field label="Яка твоя головна аудиторія?" required>
               <input
                 type="text"
@@ -169,7 +158,6 @@ export default function Home() {
               />
             </Field>
 
-            {/* Result */}
             <Field label="Який результат отримує клієнт?" required>
               <input
                 type="text"
@@ -179,7 +167,6 @@ export default function Home() {
               />
             </Field>
 
-            {/* Link */}
             <Field label="Є посилання (сайт, Telegram, Instagram)?">
               <input
                 type="text"
@@ -190,8 +177,10 @@ export default function Home() {
             </Field>
 
             {error && (
-              <div className="rounded-xl px-4 py-3 text-sm font-medium"
-                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171" }}>
+              <div
+                className="rounded-xl px-4 py-3 text-sm font-medium"
+                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171" }}
+              >
                 {error}
               </div>
             )}
@@ -199,11 +188,9 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl text-white font-bold text-lg transition-all duration-200 relative overflow-hidden"
+              className="w-full py-4 rounded-xl text-white font-bold text-lg transition-all duration-200"
               style={{
-                background: loading
-                  ? "#333"
-                  : "linear-gradient(135deg, #7C3AED, #EC4899)",
+                background: loading ? "#333" : "linear-gradient(135deg, #7C3AED, #EC4899)",
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
@@ -227,15 +214,15 @@ export default function Home() {
   );
 }
 
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeInner />
+    </Suspense>
+  );
+}
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-semibold" style={{ color: "#ccc" }}>
@@ -251,8 +238,7 @@ function Spinner() {
   return (
     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   );
 }
