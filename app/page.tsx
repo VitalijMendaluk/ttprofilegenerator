@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useRouter } from "next/navigation";
 
 const NICHES = [
   "БАДи та здоров'я",
@@ -14,7 +13,9 @@ const NICHES = [
   "Інше",
 ];
 
-const STORAGE_KEY = "tiktok_form_data";
+// sessionStorage — зберігається тільки в межах одної вкладки/сесії.
+// Нова вкладка або новий день = порожня форма. "Змінити дані" = дані збережені.
+const SESSION_KEY = "tiktok_form_session";
 
 interface FormState {
   name: string;
@@ -36,27 +37,23 @@ const defaultForm: FormState = {
   link: "",
 };
 
-function HomeInner() {
+export default function Home() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [form, setForm] = useState<FormState>(defaultForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Відновлюємо дані ТІЛЬКИ якщо прийшли з кнопки "Змінити дані"
   useEffect(() => {
-    if (searchParams.get("edit") === "1") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) setForm(JSON.parse(saved));
-      } catch {}
-    }
-  }, [searchParams]);
+    try {
+      const saved = sessionStorage.getItem(SESSION_KEY);
+      if (saved) setForm(JSON.parse(saved));
+    } catch {}
+  }, []);
 
   const updateField = (field: keyof FormState, value: string) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(next)); } catch {}
       return next;
     });
   };
@@ -83,6 +80,8 @@ function HomeInner() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Помилка генерації");
+      // Зберігаємо форму в localStorage щоб API /result міг регенерувати
+      localStorage.setItem("tiktok_form_data", JSON.stringify(form));
       localStorage.setItem("tiktok_result", JSON.stringify(data));
       router.push("/result");
     } catch (err: unknown) {
@@ -211,14 +210,6 @@ function HomeInner() {
         </p>
       </div>
     </main>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense>
-      <HomeInner />
-    </Suspense>
   );
 }
 

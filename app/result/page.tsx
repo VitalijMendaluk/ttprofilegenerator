@@ -264,7 +264,7 @@ export default function ResultPage() {
                 ? <span className="flex items-center justify-center gap-2"><Spinner /> Генеруємо...</span>
                 : "Згенерувати новий варіант ↺"}
             </button>
-            <button onClick={() => router.push("/?edit=1")}
+            <button onClick={() => router.push("/")}
               className="flex-1 py-3.5 rounded-xl font-semibold text-sm transition-all"
               style={{ background: "transparent", color: "#888", border: "1px solid #2a2a2a" }}>
               Змінити дані ←
