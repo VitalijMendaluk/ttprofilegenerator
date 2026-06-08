@@ -220,7 +220,7 @@ export default function Home() {
         </div>
 
         <p className="text-center text-xs mt-4" style={{ color: "#444" }}>
-          Powered by Google Gemini AI • Безкоштовно
+          Powered by Groq AI • Безкоштовно
         </p>
       </div>
     </main>
